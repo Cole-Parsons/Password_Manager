@@ -1,5 +1,6 @@
 import json
 import os
+from cryptography.fernet import Fernet
 
 def display_menu():
     print('PASSWORD MANAGER')
@@ -92,6 +93,10 @@ def add_password(account, username):
 #start  main
 #load from json file
 
+#create key for encryption
+key = Fernet.generate_key()
+cipher = Fernet(key)
+
 if os.path.exists('accounts.json'):
     with open('accounts.json', 'r') as file:
         accounts = json.load(file)
@@ -144,8 +149,10 @@ while True:
         remove_site(accounts, username)
         print()
     elif user_num == 6:
-        with open('accounts.json', 'w') as file:
-            json.dump(accounts, file, indent=4)
+        json_string = json.dumps(accounts)
+        encrypted_data = cipher.encrypt(json_string.decode())
+        with open('notpasswords.txt', 'w')as file:
+            file.write(encrypted_data.encode())
         print('Saved and exited')
         exit()
     else:
