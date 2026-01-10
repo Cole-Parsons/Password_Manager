@@ -1,3 +1,6 @@
+#accounts (dict) >  JSON string > bytes > encrypt bites > write to file (binary mode)
+#
+
 import json
 import os
 from cryptography.fernet import Fernet
@@ -91,17 +94,26 @@ def add_password(account, username):
     accounts[username]['sites'][new_site] = new_password
 
 #start  main
-#load from json file
 
 #create key for encryption
-key = Fernet.generate_key()
-cipher = Fernet(key)
-
-if os.path.exists('accounts.json'):
-    with open('accounts.json', 'r') as file:
-        accounts = json.load(file)
+key_file = 'secret.key'
+if os.path.exists(key_file):
+    with open(key_file, 'rb') as f:
+        key = f.read()
 else:
-    accounts = {}  
+    key = Fernet.generate_key()
+    with open(key_file, 'wb') as f:
+        f.write(key)
+
+fernetkey = Fernet(key)
+#reading encrypted file
+with open('notpasswords.txt', 'rb') as encrypted_file:
+    encrypted_data = encrypted_file.read()
+
+#decrypt
+decrpyted_data = fernet.decrypt(encrypted_data)
+
+accounts = {}  
 
 #log in 
 logged_in = False
@@ -149,12 +161,19 @@ while True:
         remove_site(accounts, username)
         print()
     elif user_num == 6:
+        #json to json string
         json_string = json.dumps(accounts)
-        encrypted_data = cipher.encrypt(json_string.decode())
-        with open('notpasswords.txt', 'w')as file:
-            file.write(encrypted_data.encode())
+        #json string > bytes
+        json_bytes = json_string.encode('utf-8')
+        #bytes > encrypted bytes
+        encrypted_bytes = fernetkey.encrypt(json_bytes)
+        #encrypted bytes > file
+        with open('encrypted_data.bin', 'wb') as f:
+            f.write(encrypted_bytes)
         print('Saved and exited')
         exit()
     else:
         print('Invalid input. Try again')
         print()
+
+
