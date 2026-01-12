@@ -1,5 +1,4 @@
-#accounts (dict) >  JSON string > bytes > encrypt bites > write to file (binary mode)
-#
+#run to see issues
 
 import json
 import os
@@ -91,29 +90,33 @@ def add_password(account, username):
     new_site = input('Enter website name: ')
     new_password = input('Enter password for website: ')
 
-    accounts[username]['sites'][new_site] = new_password
+    accounts[username]['sites'][new_site] = new_password  
 
 #start  main
 
-#create key for encryption
 key_file = 'secret.key'
+data_file = 'encrypted_data.bin'
+#if key file exists > read > set key | if not generate key and write to file key_file
 if os.path.exists(key_file):
     with open(key_file, 'rb') as f:
         key = f.read()
 else:
     key = Fernet.generate_key()
     with open(key_file, 'wb') as f:
-        f.write(key)
+            f.write(key)
 
 fernetkey = Fernet(key)
-#reading encrypted file
-with open('notpasswords.txt', 'rb') as encrypted_file:
-    encrypted_data = encrypted_file.read()
 
-#decrypt
-decrpyted_data = fernet.decrypt(encrypted_data)
+#main storage for user data
+accounts = {}
 
-accounts = {}  
+#filling accounts open file > read > decrypt > binary to json string > json string to dict (accounts)
+if os.path.exists(data_file):
+    with open(data_file, 'rb') as file:
+        temp_encrypted_bytes = file.read()
+    temp_decrypted_bytes = fernetkey.decrypt(temp_encrypted_bytes)
+    temp_json_string = temp_decrypted_bytes.decode('utf-8')
+    accounts = json.loads(temp_json_string)
 
 #log in 
 logged_in = False
@@ -168,12 +171,10 @@ while True:
         #bytes > encrypted bytes
         encrypted_bytes = fernetkey.encrypt(json_bytes)
         #encrypted bytes > file
-        with open('encrypted_data.bin', 'wb') as f:
+        with open(data_file, 'wb') as f:
             f.write(encrypted_bytes)
         print('Saved and exited')
         exit()
     else:
         print('Invalid input. Try again')
         print()
-
-
