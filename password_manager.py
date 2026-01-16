@@ -1,8 +1,12 @@
-#run to see issues
+#Hashing works
+#Encryption still works
+#Restart works
+#Wrong password fails cleanly
 
 import json
 import os
 from cryptography.fernet import Fernet
+import bcrypt
 
 def display_menu():
     print('PASSWORD MANAGER')
@@ -23,8 +27,9 @@ def add_account(account):
             continue
 
         master_password = input('Enter account password: ')
+        hashed_password = bcrypt.hashpw(master_password.encode(), bcrypt.gensalt())
         account[user_name] = {
-        'master_password': master_password,
+        'master_password': hashed_password.decode(),
         'sites': {}
         }
         break
@@ -61,7 +66,8 @@ def update_password(account, username):
             while True:
                 if choice2 == 1:
                     new_master = input('New Master: ')
-                    account[username]['master_password'] = new_master
+                    new_hashed_master = bcrypt.hashpw(new_master.encode(), bcrypt.gensalt())
+                    account[username]['master_password'] = new_hashed_master.decode()
                     print('Changed Master Password')
                     return
                 elif choice2 == 2:
@@ -136,7 +142,7 @@ while logged_in == False:
     while password_check == False:
         temp_password = input('Enter Password: ')
 
-        if temp_password == accounts[username]['master_password']:
+        if bcrypt.checkpw(temp_password.encode(), accounts[username]['master_password'].encode()): 
             logged_in = True
             password_check = True
         else: 
