@@ -1,1 +1,4 @@
 *.json
+*.bin
+*.key
+*.DS_Store
